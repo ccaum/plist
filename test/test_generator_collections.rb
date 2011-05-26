@@ -12,16 +12,13 @@ class TestGeneratorCollections < Test::Unit::TestCase
 	<integer>3</integer>
 </array>
 END
+    expected.gsub!(/\s/, '')
 
     assert_equal expected, [1,2,3].to_plist(false)
   end
 
   def test_empty_array
-    expected = <<END
-<array/>
-END
-
-    assert_equal expected, [].to_plist(false)
+    assert_equal "<array/>", [].to_plist(false)
   end
 
   def test_hash
@@ -33,17 +30,15 @@ END
 	<string>bar</string>
 </dict>
 END
+    expected.gsub!(/\s/, '')
+
     # thanks to recent changes in the generator code, hash keys are sorted before emission,
     # so multi-element hash tests should be reliable.  We're testing that here too.
     assert_equal expected, {:foo => :bar, :abc => 123}.to_plist(false)
   end
 
   def test_empty_hash
-    expected = <<END
-<dict/>
-END
-
-    assert_equal expected, {}.to_plist(false)
+    assert_equal "<dict/>", {}.to_plist(false)
   end
 
   def test_hash_with_array_element
@@ -57,6 +52,7 @@ END
 	</array>
 </dict>
 END
+    expected.gsub!(/\s/, '')
     assert_equal expected, {:ary => [1,:b,'3']}.to_plist(false)
   end
 
@@ -71,7 +67,7 @@ END
 	<integer>3</integer>
 </array>
 END
-
+    expected.gsub!(/\s/, '')
     assert_equal expected, [{:foo => 'bar'}, :b, 3].to_plist(false)
   end
 end

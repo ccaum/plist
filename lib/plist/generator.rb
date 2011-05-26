@@ -23,9 +23,24 @@ module Plist ; end
 #
 # For detailed usage instructions, refer to USAGE[link:files/docs/USAGE.html] and the methods documented below.
 module Plist::Emit
+  ARRAY = 'array'.freeze
+  ARRAY_EMPTY = '<array/>'.freeze
+  DATA_START = "\n<data>\n".freeze
+  DATA_END = "\n</data>".freeze
+  DATE = 'date'.freeze
+  DICT = 'dict'.freeze
+  DICT_EMPTY = '<dict/>'.freeze
+  FALSE = '<false/>'.freeze
+  INTEGER = 'integer'.freeze
+  KEY = 'key'.freeze
+  REAL = 'real'.freeze
+  STRING = 'string'.freeze
+  TIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ'.freeze
+  TRUE = '<true/>'.freeze
+
   # Helper method for injecting into classes.  Calls <tt>Plist::Emit.dump</tt> with +self+.
   def to_plist(envelope = true)
-    return Plist::Emit.dump(self, envelope)
+    Plist::Emit.dump(self, envelope)
   end
 
   # Helper method for injecting into classes.  Calls <tt>Plist::Emit.save_plist</tt> with +self+.
@@ -46,7 +61,7 @@ module Plist::Emit
 
     output = wrap(output) if envelope
 
-    return output
+    output
   end
 
   # Writes the serialized object's plist to the specified filename.
@@ -58,7 +73,7 @@ module Plist::Emit
 
   private
   def self.plist_node(element)
-    output = ''
+    output = []
 
     if element.respond_to? :to_plist_node
       output << element.to_plist_node
@@ -66,46 +81,53 @@ module Plist::Emit
       case element
       when Array
         if element.empty?
-          output << "<array/>\n"
+          output << ARRAY_EMPTY
         else
-          output << tag('array') {
+          output << tag(ARRAY) {
             element.collect {|e| plist_node(e)}
           }
         end
       when Hash
         if element.empty?
-          output << "<dict/>\n"
+          output << DICT_EMPTY
         else
           inner_tags = []
 
           element.keys.sort.each do |k|
             v = element[k]
-            inner_tags << tag('key', CGI::escapeHTML(k.to_s))
+            inner_tags << tag(KEY, CGI::escapeHTML(k.to_s))
             inner_tags << plist_node(v)
           end
 
-          output << tag('dict') {
+          output << tag(DICT) {
             inner_tags
           }
         end
-      when true, false
-        output << "<#{element}/>\n"
+      when true
+        output << TRUE
+      when false
+        output << FALSE
       when Time
-        output << tag('date', element.utc.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        output << tag(DATE, element.utc.strftime(TIME_FORMAT))
       when Date # also catches DateTime
-        output << tag('date', element.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        output << tag(DATE, element.strftime(TIME_FORMAT))
       when String, Symbol, Fixnum, Bignum, Integer, Float
         output << tag(element_type(element), CGI::escapeHTML(element.to_s))
       when IO, StringIO
         element.rewind
         contents = element.read
+
         # note that apple plists are wrapped at a different length then
         # what ruby's base64 wraps by default.
         # I used #encode64 instead of #b64encode (which allows a length arg)
         # because b64encode is b0rked and ignores the length arg.
-        data = "\n"
-        Base64::encode64(contents).gsub(/\s+/, '').scan(/.{1,68}/o) { data << $& << "\n" }
-        output << tag('data', data)
+        output << DATA_START
+
+        data = []
+        Base64::encode64(contents).gsub(/\s+/, '').scan(/.{1,68}/o) { data << $& }
+        output << data.join("\n")
+
+        output << DATA_END
       else
         output << comment( 'The <data> element below contains a Ruby object which has been serialized with Marshal.dump.' )
         data = "\n"
@@ -114,101 +136,36 @@ module Plist::Emit
       end
     end
 
-    return output
+    output.join
   end
 
   def self.comment(content)
-    return "<!-- #{content} -->\n"
+    "<!-- #{content} -->\n"
   end
 
   def self.tag(type, contents = '', &block)
-    out = nil
-
-    if block_given?
-      out = IndentedString.new
-      out << "<#{type}>"
-      out.raise_indent
-
-      out << block.call
-
-      out.lower_indent
-      out << "</#{type}>"
-    else
-      out = "<#{type}>#{contents.to_s}</#{type}>\n"
-    end
-
-    return out.to_s
+    contents = block.call if block_given?
+    "<#{type}>#{contents.to_s}</#{type}>"
   end
 
   def self.wrap(contents)
-    output = ''
-
-    output << '<?xml version="1.0" encoding="UTF-8"?>' + "\n"
-    output << '<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' + "\n"
-    output << '<plist version="1.0">' + "\n"
-
-    output << contents
-
-    output << '</plist>' + "\n"
-
-    return output
+<<-eos
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">#{contents}</plist>
+eos
   end
 
   def self.element_type(item)
     case item
     when String, Symbol
-      'string'
-
+      STRING
     when Fixnum, Bignum, Integer
-      'integer'
-
+      INTEGER
     when Float
-      'real'
-
+      REAL
     else
       raise "Don't know about this data type... something must be wrong!"
-    end
-  end
-  private
-  class IndentedString #:nodoc:
-    attr_accessor :indent_string
-
-    def initialize(str = "\t")
-      @indent_string = str
-      @contents = ''
-      @indent_level = 0
-    end
-
-    def to_s
-      return @contents
-    end
-
-    def raise_indent
-      @indent_level += 1
-    end
-
-    def lower_indent
-      @indent_level -= 1 if @indent_level > 0
-    end
-
-    def <<(val)
-      if val.is_a? Array
-        val.each do |f|
-          self << f
-        end
-      else
-        # if it's already indented, don't bother indenting further
-        unless val =~ /\A#{@indent_string}/
-          indent = @indent_string * @indent_level
-
-          @contents << val.gsub(/^/, indent)
-        else
-          @contents << val
-        end
-
-        # it already has a newline, don't add another
-        @contents << "\n" unless val =~ /\n$/
-      end
     end
   end
 end

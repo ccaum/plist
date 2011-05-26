@@ -49,6 +49,7 @@ END
 
   def test_generator_io_and_file
     expected = <<END
+
 <data>
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
@@ -81,6 +82,7 @@ END
 
   def test_generator_string_io
     expected = <<END
+
 <data>
 dGhpcyBpcyBhIHN0cmluZ2lvIG9iamVjdA==
 </data>
@@ -107,7 +109,7 @@ END
     # test writing data elements
     expected = File.read("test/assets/example_data.plist")
     result   = data.to_plist
-    #File.open('result.plist', 'w') {|f|f.write(result)} # debug
+    File.open('result.plist', 'w') {|f|f.write(result)} # debug
     assert_equal( expected, result )
 
     # Test changing the <data> object in the plist to a StringIO and writing.
