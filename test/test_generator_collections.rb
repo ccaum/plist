@@ -22,19 +22,13 @@ END
   end
 
   def test_hash
-    expected = <<END
-<dict>
-	<key>abc</key>
-	<integer>123</integer>
-	<key>foo</key>
-	<string>bar</string>
-</dict>
-END
-    expected.gsub!(/\s/, '')
-
     # thanks to recent changes in the generator code, hash keys are sorted before emission,
     # so multi-element hash tests should be reliable.  We're testing that here too.
-    assert_equal expected, {:foo => :bar, :abc => 123}.to_plist(false)
+    # ^ Slow production code, removed sorted keys
+    plist = {:foo => :bar, :abc => 123}.to_plist(false)
+
+    assert plist.include?("<key>abc</key><integer>123</integer>")
+    assert plist.include?("<key>foo</key><string>bar</string>")
   end
 
   def test_empty_hash
