@@ -7,6 +7,7 @@
 #
 # Copyright 2006-2010 Ben Bleything and Patrick May
 # Distributed under the MIT License
+# Modifications to binary plist by mosen (2011)
 #
 
 require 'base64'
@@ -14,8 +15,9 @@ require 'cgi'
 require 'stringio'
 
 require 'plist/generator'
-require 'plist/parser'
+require 'plist/parser_xml'
+require 'plist/parser_bplist'
 
 module Plist
-  VERSION = '3.1.0'
+  VERSION = '3.1.0.1'
 end
