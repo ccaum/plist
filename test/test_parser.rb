@@ -5,7 +5,7 @@ require 'plist'
 
 class TestParser < Test::Unit::TestCase
   def test_Plist_parse_xml
-    result = Plist::parse_xml("test/assets/AlbumData.xml")
+    result = Plist::parse("test/assets/AlbumData.xml")
 
     # dict
     assert_kind_of( Hash, result )
@@ -57,7 +57,7 @@ class TestParser < Test::Unit::TestCase
 
   # date fields are credited to
   def test_date_fields
-    result = Plist::parse_xml("test/assets/Cookies.plist")
+    result = Plist::parse("test/assets/Cookies.plist")
     assert_kind_of( DateTime, result.first['Expires'] )
     assert_equal DateTime.parse( "2007-10-25T12:36:35Z" ), result.first['Expires']
   end
@@ -66,20 +66,20 @@ class TestParser < Test::Unit::TestCase
   # reported by Matthias Peick <matthias@peick.de>
   # reported and fixed by Frederik Seiffert <ego@frederikseiffert.de>
   def test_empty_dict_key
-    data = Plist::parse_xml("test/assets/test_empty_key.plist");
+    data = Plist::parse("test/assets/test_empty_key.plist");
     assert_equal("2", data['key']['subkey'])
   end
 
   # bug fix for decoding entities
   #  reported by Matthias Peick <matthias@peick.de>
   def test_decode_entities
-    data = Plist::parse_xml('<string>Fish &amp; Chips</string>')
+    data = Plist::parse('<string>Fish &amp; Chips</string>')
     assert_equal('Fish & Chips', data)
   end
 
   def test_comment_handling_and_empty_plist
     assert_nothing_raised do
-      assert_nil( Plist::parse_xml( File.read('test/assets/commented.plist') ) )
+      assert_nil( Plist::parse( File.read('test/assets/commented.plist') ) )
     end
   end
 

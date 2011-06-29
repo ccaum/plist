@@ -62,8 +62,8 @@ module Plist
   require 'ostruct'
   require 'strscan'
   
-  def Plist::parse_bplist( filename )
-    obj = BPlist.load File.read(filename)
+  def Plist::parse_bplist( data )
+    obj = BPlist.load data
   end
   
   class BPlist
@@ -87,8 +87,8 @@ module Plist
   			raise "problem parsing bplist"
   		end
 
-      puts 'Trailer'
-      puts @trailer.inspect
+      #puts 'Trailer'
+      #puts @trailer.inspect
 
       # original code by aquamac assumed that bplist would never use 1byte offsets in the table, well that does happen - mosen
       # 1 - 8bit, 2 - 16bit
@@ -104,10 +104,10 @@ module Plist
   		@offtab = @data[@trailer.offtab_offset, @trailer.num_objs * @trailer.int_size].
   			unpack @unpack_offset_char * @trailer.num_objs
   			
-  		puts "Offset table"
-  		puts @offtab.length
-  		puts "Unpack with char #{@unpack_offset_char}"
-  		puts @offtab.inspect
+  		#puts "Offset table"
+  		#puts @offtab.length
+  		#puts "Unpack with char #{@unpack_offset_char}"
+  		#puts @offtab.inspect
   	end
 
   	def load_object scanner
@@ -115,7 +115,7 @@ module Plist
   		# arg can be an index (into offtab), or a string scanner
   		unless scanner.respond_to? :get_byte
   			@idx, scanner = scanner, StringScanner.new(@data)
-  			puts "Load object from offset table 0x%x" % @trailer.offtab_offset, "+#{@idx} -> %x" % offtab[@idx]
+  			#puts "Load object from offset table 0x%x" % @trailer.offtab_offset, "+#{@idx} -> %x" % offtab[@idx]
         #return nil if offtab[@idx] == nil
   			
 
@@ -138,7 +138,7 @@ module Plist
 
   		#int	0001 nnnn	...		// # of bytes is 2^nnnn, big-endian bytes
   		when /^0001/
-  			puts "int"
+  			#puts "int"
   			x = 0
   			(1 << aux).times do
   				x *= 256
@@ -147,7 +147,7 @@ module Plist
   			x
   	#real	0010 nnnn	...		// # of bytes is 2^nnnn, big-endian bytes
 	    when /^0010/
-	      puts "real"
+	      #puts "real"
 	      x = 0
 	      (1 << aux).times do
 	        x *= 256
@@ -157,37 +157,37 @@ module Plist
   	#date	0011 0011	...		// 8 byte float follows, big-endian bytes
   	#data	0100 nnnn	[int]	...	// nnnn is number of bytes unless 1111 then int count follows, followed by bytes
       when /^0100/
-        puts "data"
+        #puts "data"
         n = aux == 15 ? load_object(scanner) : aux
         @data[scanner.pos, n] # return data as hex encoded string
 
   		#string	0101 nnnn	[int]	...	// ASCII string, nnnn is # of chars, else 1111 then int count, then bytes
   		when /^0101/
-  			puts "string"
+  			#puts "string"
   			n = aux == 15 ? load_object(scanner) : aux
-  			puts @data[scanner.pos, n]
+  			#puts @data[scanner.pos, n]
   			@data[scanner.pos, n]
 
   		#string	0110 nnnn	[int]	...	// Unicode string, nnnn is # of chars, else 1111 then int count, then big-endian 2-byte uint16_t
 
   		#array	1010 nnnn	[int]	objref*	// nnnn is count, unless '1111', then int count follows
   		when /^1010/
-  			puts "array"
+  			#puts "array"
   			n = aux == 15 ? load_object(scanner) : aux
-  			puts aux
+  			# puts aux
   			# mosen - added @trailer.ref_size * n instead of "2" - because the ref size can be anything according to the file spec
   			idxs = @data[scanner.pos, @trailer.ref_size * n].unpack(@unpack_ref_char + '*') # List of objects in the offset table that are a part of this structure
-  			p idxs
+  			#p idxs
   			idxs.map { |idx| load_object idx }
 
   		#dict	1101 nnnn	[int]	keyref* objref*	// nnnn is count, unless '1111', then int count follows
   		when /^1101/
-  			puts "dict"
+  			#puts "dict"
   			n = aux == 15 ? load_object(scanner) : aux
   			idxs = @data[scanner.pos, 2 * n].unpack(@unpack_ref_char + '*') # 
   			idxs = idxs[0 ... idxs.length / 2].zip(idxs[idxs.length / 2 .. -1]).flatten
-  			puts "dict:indexes"
-  			p idxs
+  			# puts "dict:indexes"
+  			#p idxs
   			Hash[*idxs.map { |idx| load_object idx }]
 
   		else

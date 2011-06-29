@@ -108,13 +108,28 @@ module Plist
     end
   end
 
+
   class PTag
     @@mappings = { }
+    # @@mappings = {
+    #   'plist' => PList,
+    #   'dict' => PDict,
+    #   'key' => PKey,
+    #   'string' => PString,
+    #   'array' => PArray,
+    #   'integer' => PInteger,
+    #   'true' => PTrue,
+    #   'false' => PFalse,
+    #   'real' => PReal,
+    #   'date' => PDate,
+    #   'data' => PData
+    # }
     def PTag::mappings
       @@mappings
     end
 
     def PTag::inherited( sub_class )
+      #p 'Inherited!'
       key = sub_class.to_s.downcase
       key.gsub!(/^plist::/, '' )
       key.gsub!(/^p/, '')  unless key == "plist"
@@ -124,6 +139,7 @@ module Plist
 
     attr_accessor :text, :children
     def initialize
+      #p 'init PTag'
       @children = Array.new
     end
 
@@ -222,4 +238,8 @@ module Plist
       end
     end
   end
+
+
+
+
 end

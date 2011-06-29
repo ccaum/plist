@@ -17,6 +17,8 @@ require 'stringio'
 require 'plist/generator'
 require 'plist/parser_xml'
 require 'plist/parser_bplist'
+require 'plist/parser'
+
 
 module Plist
   VERSION = '3.1.0.1'
