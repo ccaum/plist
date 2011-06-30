@@ -15,7 +15,14 @@ require 'rake/testtask'
 require 'rake/packagetask'
 require 'rubygems/package_task'
 require 'rake/contrib/rubyforgepublisher'
+
+begin
 require 'rdoc/task'
+  doctask = RDoc::Task
+rescue LoadError
+  require 'rake/rdoctask'
+  doctask = Rake::RDocTask
+end
 
 $:.unshift(File.dirname(__FILE__) + "/lib")
 require 'plist'
@@ -104,7 +111,7 @@ task :update_rdoc => [ :rdoc ] do
 end
 
 # Genereate the RDoc documentation
-RDoc::Task.new do |rdoc|
+doctask.new do |rdoc|
   rdoc.title = "All-purpose Property List manipulation library"
   rdoc.main  = "README.rdoc"
 
