@@ -7,7 +7,7 @@
 #
 # Copyright 2006-2010 Ben Bleything and Patrick May
 # Distributed under the MIT License
-# Modifications to binary plist by mosen (2011)
+# Binary Plist parser added from aquasync's plist-read-only source by mosen.
 #
 
 require 'base64'

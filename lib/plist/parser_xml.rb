@@ -111,19 +111,7 @@ module Plist
 
   class PTag
     @@mappings = { }
-    # @@mappings = {
-    #   'plist' => PList,
-    #   'dict' => PDict,
-    #   'key' => PKey,
-    #   'string' => PString,
-    #   'array' => PArray,
-    #   'integer' => PInteger,
-    #   'true' => PTrue,
-    #   'false' => PFalse,
-    #   'real' => PReal,
-    #   'date' => PDate,
-    #   'data' => PData
-    # }
+
     def PTag::mappings
       @@mappings
     end
@@ -139,7 +127,6 @@ module Plist
 
     attr_accessor :text, :children
     def initialize
-      #p 'init PTag'
       @children = Array.new
     end
 
